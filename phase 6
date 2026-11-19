@@ -1,0 +1,57 @@
+[ISP]
+
+enable
+configure terminal
+
+interface GigabitEthernet0/0
+ description to-HQ-EDGE
+ ip address 203.0.113.1 255.255.255.248
+ no shutdown
+
+interface GigabitEthernet0/1
+ description to-INET-SRV
+ ip address 198.51.100.1 255.255.255.0
+ no shutdown
+exit
+
+end
+write
+
+[HQ-EDGE]
+
+enable
+configure terminal
+
+interface GigabitEthernet0/2
+ description to-ISP
+ ip address 203.0.113.2 255.255.255.248
+ ip nat outside
+ no shutdown
+
+interface GigabitEthernet0/0
+ ip nat inside
+interface GigabitEthernet0/1
+ ip nat inside
+interface Serial0/0/0
+ ip nat inside
+interface Serial0/0/1
+ ip nat inside
+exit
+
+ip access-list standard NAT-INSIDE
+ permit 10.10.0.0 0.0.255.255
+ permit 10.20.0.0 0.0.255.255
+exit
+
+ip nat inside source list NAT-INSIDE interface GigabitEthernet0/2 overload
+
+ip nat inside source static 10.10.50.20 203.0.113.5
+
+ip route 0.0.0.0 0.0.0.0 203.0.113.1
+
+router ospf 1
+ default-information originate
+exit
+
+end
+write
